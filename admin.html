@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FreshTrack · Complete Frontend</title>
+    <!-- Google Fonts + Chart.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #34d399;
+            --primary-soft: #d1fae5;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-900: #111827;
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(145deg, #faf9f7 0%, #e6f9ef 100%);
+            color: var(--gray-700);
+            scroll-behavior: smooth;
+        }
+
+        /* Leaf overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle at 15% 30%, rgba(16,185,129,0.04) 0%, transparent 50%),
+                              radial-gradient(circle at 85% 70%, rgba(52,211,153,0.04) 0%, transparent 55%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* typography */
+        h1, h2, h3 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        h1 { font-size: 2.25rem; background: linear-gradient(135deg, #0f5e47, var(--primary)); background-clip: text; -webkit-background-clip: text; color: transparent; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.75rem; color: var(--gray-900); margin: 1.5rem 0 1rem; }
+        .section-title { display: flex; align-items: center; gap: 0.75rem; border-left: 5px solid var(--primary); padding-left: 1rem; margin: 2rem 0 1.5rem; }
+
+        /* buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.5rem;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 0.875rem;
+            text-decoration: none;
+            background: white;
+            color: var(--gray-700);
+        }
+        .btn-primary { background: linear-gradient(105deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 4px 8px rgba(16,185,129,0.25); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(16,185,129,0.35); }
+        .btn-outline { border: 1.5px solid var(--gray-200); background: white; }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-danger { background: linear-gradient(105deg, #ef4444, #dc2626); color: white; }
+        .btn-warning { background: linear-gradient(105deg, #f59e0b, #d97706); color: white; }
+
+        /* cards */
+        .card {
+            background: rgba(255,255,255,0.96);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(16,185,129,0.12);
+            margin-bottom: 1.8rem;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+        .stat-value { font-size: 2.2rem; font-weight: 800; color: var(--gray-900); line-height: 1; }
+
+        /* product grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.8rem;
+            margin-top: 1rem;
+        }
+        .product-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            transition: 0.25s ease;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-100);
+            position: relative;
+        }
+        .product-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: var(--primary-soft); }
+        .discount-badge {
+            position: absolute; top: 12px; right: 12px;
+            background: var(--danger); color: white; padding: 0.3rem 0.8rem;
+            border-radius: 40px; font-size: 0.75rem; font-weight: 700;
+        }
+        .product-header { padding: 1.2rem 1.2rem 0.5rem; display: flex; justify-content: space-between; }
+        .product-name { font-weight: 700; font-size: 1.1rem; }
+        .product-price { font-weight: 800; color: var(--primary-dark); font-size: 1.3rem; }
+        .product-info { padding: 0 1.2rem 1rem; }
+        .info-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin: 0.5rem 0; }
+        .alert-badge { display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.75rem; border-radius: 40px; font-weight: 700; font-size: 0.7rem; }
+        .alert-urgent { background: #fee2e2; color: #b91c1c; }
+        .alert-soon { background: #ffedd5; color: #9a3412; }
+
+        /* tables */
+        .data-table-wrapper { overflow-x: auto; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { background: var(--gray-100); padding: 1rem; text-align: left; font-weight: 600; }
+        .data-table td { padding: 1rem; border-bottom: 1px solid var(--gray-200); }
+        .status-badge { padding: 0.2rem 0.7rem; border-radius: 40px; font-size: 0.7rem; font-weight: 600; }
+        .status-approved { background: #d1fae5; color: #065f46; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+
+        /* forms */
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.85rem; }
+        .form-input, select, textarea {
+            width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-md); font-family: inherit; transition: 0.2s;
+        }
+        .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+
+        /* role tabs */
+        .role-tabs {
+            display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid var(--gray-200); padding-bottom: 0.5rem;
+        }
+        .role-tab {
+            padding: 0.5rem 1.5rem; border-radius: 40px; cursor: pointer; font-weight: 600; background: white; transition: 0.2s;
+        }
+        .role-tab.active { background: var(--primary); color: white; box-shadow: var(--shadow-sm); }
+        .section-group { display: none; animation: fade 0.3s ease; }
+        .section-group.active-group { display: block; }
+        @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .product-grid { gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Logo and role switcher (simulate different views) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 2.2rem;">🥬</span>
+            <span style="font-weight: 800; font-size: 1.6rem; background: linear-gradient(135deg, #0f5e47, var(--primary)); background-clip: text; -webkit-background-clip: text; color: transparent;">FreshTrack</span>
+        </div>
+        <div class="role-tabs">
+            <div class="role-tab active" data-role="buyer">🛒 Buyer Mode</div>
+            <div class="role-tab" data-role="seller">🏪 Seller Mode</div>
+            <div class="role-tab" data-role="admin">⚙️ Admin Mode</div>
+        </div>
+    </div>
+
+    <!-- ================= BUYER SECTION ================= -->
+    <div id="buyerSection" class="section-group active-group">
+        <div class="card" style="background: linear-gradient(115deg, #f0fdf4, #dcfce7);">
+            <h1>🌱 Fresh finds, huge savings</h1>
+            <p>Smart expiry tracking · Up to 70% off · Reduce waste</p>
+            <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                <input type="text" placeholder="🔍 Search products or sellers..." class="form-input" style="max-width: 300px;">
+                <button class="btn btn-primary">Search</button>
+            </div>
+        </div>
+
+        <!-- Stats for buyer -->
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value">14</div><div>Products on sale</div></div>
+            <div class="stat-card"><div class="stat-value">৳2,340</div><div>Total savings today</div></div>
+            <div class="stat-card"><div class="stat-value">18</div><div>Urgent deals</div></div>
+        </div>
+
+        <div class="section-title"><span>🔥</span><h2>Urgent deals (expiring soon)</h2></div>
+        <div class="product-grid" id="buyerProductGrid">
+            <!-- dynamic JS will populate, but static for demo -->
+        </div>
+
+        <!-- Cart preview & checkout -->
+        <div class="card">
+            <h3>🛒 Your cart</h3>
+            <div id="cartPreview">🍎 Organic Avocado x2 — ৳420<br>🥛 Almond Milk x1 — ৳320</div>
+            <div style="border-top: 1px solid var(--gray-200); margin-top: 1rem; padding-top: 1rem; display: flex; justify-content: space-between;">
+                <strong>Total: ৳740</strong>
+                <button class="btn btn-primary">Proceed to checkout →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SELLER SECTION ================= -->
+    <div id="sellerSection" class="section-group">
+        <div class="card"><h2>📊 Seller performance</h2>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-value">24</div><div>Total products</div></div>
+                <div class="stat-card"><div class="stat-value">৳18.2K</div><div>Revenue (30d)</div></div>
+                <div class="stat-card"><div class="stat-value">⭐ 4.7</div><div>Avg rating</div></div>
+                <div class="stat-card"><div class="stat-value" style="color: var(--warning);">5</div><div>Alerts</div></div>
+            </div>
+        </div>
+
+        <!-- Quick edit & product table -->
+        <div class="section-title"><span>📦</span><h2>Your products (manage inventory)</h2></div>
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead><tr><th>Product</th><th>Stock</th><th>Price</th><th>Discount</th><th>Expiry</th><th>Action</th></tr></thead>
+                <tbody>
+                    <tr><td>Organic Avocado</td><td>24</td><td>৳300</td><td>30%</td><td>6h left</td><td><button class="btn btn-primary btn-sm" style="padding:0.3rem 1rem;">✎ Edit</button></td></tr>
+                    <tr><td>Greek Yogurt</td><td>3</td><td>৳250</td><td>50%</td><td>2h left</td><td><button class="btn btn-warning btn-sm">Apply discount</button></td></tr>
+                    <tr><td>Spinach bunch</td><td>12</td><td>৳89</td><td>0%</td><td>3h left</td><td><button class="btn btn-outline btn-sm">Quick edit</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Smart discount suggestions -->
+        <div class="card" style="background: #fffbeb;">
+            <h3>💡 Smart discount suggestions</h3>
+            <p>Based on expiry: <strong>Greek Yogurt</strong> → apply 50% discount to avoid waste. <button class="btn btn-warning btn-sm" style="margin-left: 1rem;">Apply now</button></p>
+        </div>
+
+        <!-- Add product quick form -->
+        <div class="card"><h3>➕ Quick add product</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"><input class="form-input" placeholder="Product name"><input class="form-input" placeholder="Price (৳)"><input class="form-input" placeholder="Quantity"><input type="datetime-local" class="form-input"></div>
+            <button class="btn btn-primary" style="margin-top: 1rem;">Add product</button>
+        </div>
+    </div>
+
+    <!-- ================= ADMIN SECTION ================= -->
+    <div id="adminSection" class="section-group">
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value">47</div><div>Total products</div></div>
+            <div class="stat-card"><div class="stat-value">8</div><div>Pending approvals</div></div>
+            <div class="stat-card"><div class="stat-value">12</div><div>Active sellers</div></div>
+        </div>
+        <div class="section-title"><span>⏳</span><h2>Pending product moderation</h2></div>
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead><tr><th>Product</th><th>Seller</th><th>Price</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                    <tr><td>Organic Tomatoes</td><td>HarvestHub</td><td>৳89</td><td>2025-05-02</td><td><span class="status-badge status-pending">Pending</span></td><td><button class="btn btn-primary btn-sm">✅ Approve</button> <button class="btn btn-danger btn-sm">❌ Reject</button></td></tr>
+                    <tr><td>Free-range Eggs</td><td>PureFarm</td><td>৳165</td><td>2025-04-29</td><td><span class="status-badge status-pending">Pending</span></td><td><button class="btn btn-primary">Approve</button> <button class="btn btn-danger">Reject</button></td></tr>
+                    <tr><td>Whole Wheat Bread</td><td>BakeryFresh</td><td>৳110</td><td>2025-04-28</td><td><span class="status-badge status-approved">Approved</span></td><td><button class="btn btn-outline">View</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section-title"><span>👥</span><h2>User & seller management</h2></div>
+        <div class="data-table-wrapper">
+            <table class="data-table"><thead><tr><th>Username</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody><tr><td>green_farmer</td><td>Seller</td><td>Pending</td><td><button class="btn btn-primary btn-sm">Approve</button></td></tr>
+            <tr><td>freshmart</td><td>Seller</td><td>Approved</td><td><button class="btn btn-warning btn-sm">Hold</button></td></tr></tbody></table>
+        </div>
+    </div>
+
+    <!-- ================= SHARED COMPONENTS (appear in all views) ================= -->
+    <!-- Analytics + Reviews + Alerts (shared to show completeness) -->
+    <div class="section-title"><span>📈</span><h2>Platform insights</h2></div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="card"><canvas id="salesChart" height="200"></canvas></div>
+        <div class="card"><canvas id="categoryChart" height="200"></canvas></div>
+    </div>
+
+    <!-- rating breakdown & reviews -->
+    <div class="card">
+        <h3>⭐ Customer rating breakdown</h3>
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <div style="flex:1;"><div>★ 5 <span style="float:right;">68%</span><progress value="68" max="100" style="width:100%; height:8px;"></progress></div>
+            <div>★ 4 <span style="float:right;">22%</span><progress value="22" max="100"></progress></div><div>★ 3 <span>7%</span><progress value="7" max="100"></progress></div></div>
+            <div style="flex:1; background: #f0fdf4; padding: 1rem; border-radius: 1rem;"><strong>Recent review:</strong> “Amazing quality, arrived fresh!” – John D.<br><span style="color: #fbbf24;">★★★★★</span></div>
+        </div>
+        <div style="margin-top: 1rem;"><a href="#" class="btn btn-outline">Write a review</a></div>
+    </div>
+
+    <!-- alerts summary card -->
+    <div class="card" style="background: #fef2f2; border-left: 5px solid #ef4444;">
+        <div style="display: flex; gap: 1rem;"><span style="font-size: 2rem;">🔔</span><div><strong>Active alerts</strong><br>• Spinach expires in 3h (stock:12)<br>• Bananas: waste risk – apply discount</div></div>
+        <button class="btn btn-warning btn-sm" style="margin-top: 0.8rem;">View all alerts</button>
+    </div>
+
+    <!-- Add product form (unified) -->
+    <div class="card">
+        <h2>➕ Add new product (any role)</h2>
+        <form onsubmit="event.preventDefault(); alert('Demo: product added');">
+            <div class="form-group"><label class="form-label">Product name *</label><input class="form-input" placeholder="e.g. Organic Mango"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"><div class="form-group"><label>Price (৳)</label><input class="form-input" type="number"></div><div class="form-group"><label>Quantity</label><input class="form-input" type="number"></div></div>
+            <div class="form-group"><label>Discount % (0-90)</label><input class="form-input" type="number" placeholder="0"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"><div><label>Manufacturing date</label><input class="form-input" type="datetime-local"></div><div><label>Expiry datetime</label><input class="form-input" type="datetime-local"></div></div>
+            <button class="btn btn-primary">✨ Add product</button>
+            <button class="btn btn-outline">Cancel</button>
+        </form>
+    </div>
+
+    <!-- Payment Methods Preview -->
+    <div class="card">
+        <h3>💳 Secure payment methods (demo)</h3>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <span class="btn btn-outline">💳 Credit Card</span><span class="btn btn-outline">📱 bKash</span><span class="btn btn-outline">🚀 Nagad</span><span class="btn btn-outline">🏦 Rocket</span>
+        </div>
+        <div class="alert alert-success" style="margin-top: 1rem; background: #e6f7ed; padding: 0.75rem; border-radius: 0.75rem;">✅ Sandbox mode – test card: 4111 1111 1111 1111</div>
+    </div>
+
+    <!-- invoice / history mock -->
+    <div class="card">
+        <h3>📄 Purchase history & invoices</h3>
+        <div class="data-table-wrapper">
+            <table class="data-table"><thead><tr><th>Product</th><th>Date</th><th>Amount</th><th>Invoice</th></tr></thead>
+            <tbody><tr><td>Organic Avocado</td><td>Apr 20, 2025</td><td>৳420</td><td><button class="btn btn-outline btn-sm">Download PDF</button></td></tr></tbody></table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Role switching
+    const tabs = document.querySelectorAll('.role-tab');
+    const sections = {
+        buyer: document.getElementById('buyerSection'),
+        seller: document.getElementById('sellerSection'),
+        admin: document.getElementById('adminSection')
+    };
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const role = tab.dataset.role;
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            Object.values(sections).forEach(sec => sec.classList.remove('active-group'));
+            if (role === 'buyer') sections.buyer.classList.add('active-group');
+            if (role === 'seller') sections.seller.classList.add('active-group');
+            if (role === 'admin') sections.admin.classList.add('active-group');
+        });
+    });
+
+    // Populate buyer product grid dynamically
+    const buyerProducts = [
+        { name: "Organic Avocado", price: 300, discount: 30, final: 210, stock: 24, expiry: "6h 20m", urgent: true },
+        { name: "Almond Milk 1L", price: 380, discount: 15, final: 323, stock: 8, expiry: "1d 12h", urgent: false },
+        { name: "Greek Yogurt", price: 250, discount: 50, final: 125, stock: 3, expiry: "2h 15m", urgent: true },
+        { name: "Fresh Strawberries", price: 450, discount: 0, final: 450, stock: 45, expiry: "5d 3h", urgent: false }
+    ];
+    const grid = document.getElementById('buyerProductGrid');
+    if(grid) {
+        grid.innerHTML = buyerProducts.map(p => `
+            <div class="product-card">
+                ${p.discount > 0 ? `<div class="discount-badge">🔥 ${p.discount}% OFF</div>` : ''}
+                <div class="product-header"><span class="product-name">${p.name}</span><span class="product-price">৳${p.final}</span></div>
+                <div class="product-info">
+                    <div class="info-row"><span>Stock:</span><span>${p.stock} units</span></div>
+                    <div class="info-row"><span>Expires in:</span><span style="color:${p.urgent ? '#ef4444' : '#10b981'}">${p.expiry}</span></div>
+                    <span class="alert-badge ${p.urgent ? 'alert-urgent' : ''}">${p.urgent ? 'URGENT' : 'FRESH'}</span>
+                </div>
+                <div style="padding: 1rem;"><button class="btn btn-primary" style="width:100%;">🛒 Add to cart</button></div>
+            </div>
+        `).join('');
+    }
+
+    // Charts for analytics
+    const salesCtx = document.getElementById('salesChart')?.getContext('2d');
+    if(salesCtx) {
+        new Chart(salesCtx, {
+            type: 'line',
+            data: { labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets: [{ label: 'Revenue (৳)', data: [3200,4800,5100,6900,8700,9200,10400], borderColor: '#10b981', tension: 0.3, fill: true, backgroundColor: 'rgba(16,185,129,0.05)' }] },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+    }
+    const catCtx = document.getElementById('categoryChart')?.getContext('2d');
+    if(catCtx) {
+        new Chart(catCtx, {
+            type: 'doughnut',
+            data: { labels: ['Vegetables','Fruits','Dairy','Snacks'], datasets: [{ data: [42,28,22,8], backgroundColor: ['#10b981','#34d399','#6ee7b7','#a7f3d0'], borderWidth: 0 }] },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    // Simulate countdown for demo urgency
+    function demoCountdown() {}
+    setInterval(demoCountdown, 60000);
+</script>
+
+<footer style="text-align: center; margin: 2rem 0 1rem; color: #6b7280; border-top: 1px solid var(--gray-200); padding-top: 1.5rem;">
+    <p>🌿 FreshTrack – Prevent waste, save money, enjoy freshness. Demo frontend | All rights reserved</p>
+</footer>
+</body>
+</html>
