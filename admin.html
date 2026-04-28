@@ -328,11 +328,11 @@
     <!-- Add product form (unified) -->
     <div class="card">
         <h2>➕ Add new product (any role)</h2>
-        <form onsubmit="event.preventDefault(); alert('Demo: product added');">
-            <div class="form-group"><label class="form-label">Product name *</label><input class="form-input" placeholder="e.g. Organic Mango"></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"><div class="form-group"><label>Price (৳)</label><input class="form-input" type="number"></div><div class="form-group"><label>Quantity</label><input class="form-input" type="number"></div></div>
-            <div class="form-group"><label>Discount % (0-90)</label><input class="form-input" type="number" placeholder="0"></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"><div><label>Manufacturing date</label><input class="form-input" type="datetime-local"></div><div><label>Expiry datetime</label><input class="form-input" type="datetime-local"></div></div>
+        <form id="addProductForm" onsubmit="addProduct(event)">
+            <div class="form-group"><label class="form-label">Product name *</label><input class="form-input" name="name" placeholder="e.g. Organic Mango"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"><div class="form-group"><label>Price (৳)</label><input class="form-input" name="price" type="number"></div><div class="form-group"><label>Quantity</label><input class="form-input" name="quantity" type="number"></div></div>
+            <div class="form-group"><label>Discount % (0-90)</label><input class="form-input" name="discount" type="number" placeholder="0"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"><div><label>Manufacturing date</label><input class="form-input" name="mfgDate" type="datetime-local"></div><div><label>Expiry datetime</label><input class="form-input" name="expiryDate" type="datetime-local"></div></div>
             <button class="btn btn-primary">✨ Add product</button>
             <button class="btn btn-outline">Cancel</button>
         </form>
@@ -378,26 +378,53 @@
     });
 
     // Populate buyer product grid dynamically
-    const buyerProducts = [
-        { name: "Organic Avocado", price: 300, discount: 30, final: 210, stock: 24, expiry: "6h 20m", urgent: true },
-        { name: "Almond Milk 1L", price: 380, discount: 15, final: 323, stock: 8, expiry: "1d 12h", urgent: false },
-        { name: "Greek Yogurt", price: 250, discount: 50, final: 125, stock: 3, expiry: "2h 15m", urgent: true },
-        { name: "Fresh Strawberries", price: 450, discount: 0, final: 450, stock: 45, expiry: "5d 3h", urgent: false }
-    ];
-    const grid = document.getElementById('buyerProductGrid');
-    if(grid) {
-        grid.innerHTML = buyerProducts.map(p => `
-            <div class="product-card">
-                ${p.discount > 0 ? `<div class="discount-badge">🔥 ${p.discount}% OFF</div>` : ''}
-                <div class="product-header"><span class="product-name">${p.name}</span><span class="product-price">৳${p.final}</span></div>
-                <div class="product-info">
-                    <div class="info-row"><span>Stock:</span><span>${p.stock} units</span></div>
-                    <div class="info-row"><span>Expires in:</span><span style="color:${p.urgent ? '#ef4444' : '#10b981'}">${p.expiry}</span></div>
-                    <span class="alert-badge ${p.urgent ? 'alert-urgent' : ''}">${p.urgent ? 'URGENT' : 'FRESH'}</span>
-                </div>
-                <div style="padding: 1rem;"><button class="btn btn-primary" style="width:100%;">🛒 Add to cart</button></div>
-            </div>
-        `).join('');
+    async function loadBuyerProducts() {
+        try {
+            const response = await fetch('api.php?endpoint=buyerProducts');
+            const buyerProducts = await response.json();
+            const grid = document.getElementById('buyerProductGrid');
+            if(grid) {
+                grid.innerHTML = buyerProducts.map(p => `
+                    <div class="product-card">
+                        ${p.discount > 0 ? `<div class="discount-badge">🔥 ${p.discount}% OFF</div>` : ''}
+                        <div class="product-header"><span class="product-name">${p.name}</span><span class="product-price">৳${p.final}</span></div>
+                        <div class="product-info">
+                            <div class="info-row"><span>Stock:</span><span>${p.stock} units</span></div>
+                            <div class="info-row"><span>Expires in:</span><span style="color:${p.urgent ? '#ef4444' : '#10b981'}">${p.expiry}</span></div>
+                            <span class="alert-badge ${p.urgent ? 'alert-urgent' : ''}">${p.urgent ? 'URGENT' : 'FRESH'}</span>
+                        </div>
+                        <div style="padding: 1rem;"><button class="btn btn-primary" style="width:100%;">🛒 Add to cart</button></div>
+                    </div>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Error loading buyer products:', error);
+            // Fallback to static data if needed
+        }
+    }
+    loadBuyerProducts();
+
+    // Handle add product form
+    async function addProduct(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+        
+        try {
+            const response = await fetch('api.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            alert(result.message || 'Product added successfully!');
+            form.reset();
+        } catch (error) {
+            console.error('Error adding product:', error);
+            alert('Error adding product');
+        }
+    }
     }
 
     // Charts for analytics
